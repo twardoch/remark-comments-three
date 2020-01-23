@@ -30,7 +30,7 @@ interface Comments <: Node {
 [npm][npm]:
 
 ```bash
-npm install remark-comments
+npm install remark-comments-three
 ```
 
 ## Configuration
