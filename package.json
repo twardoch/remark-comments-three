@@ -1,0 +1,79 @@
+{
+  "author": "Adam Twardoch <adam+github@twardoch.com> (https://twardoch.github.io)",
+  "bugs": {
+    "url": "https://github.com/twardoch/remark-comments-three/issues"
+  },
+  "contributors": [
+    "Adam Twardoch <adam+github@twardoch.com>",
+    "Sébastien <contact@enconn.fr> (AmarOk)",
+    "François <perso@francoisdambrine.me> (artragis)",
+    "Victor Felder <victor@draft.li> (https://draft.li)"
+  ],
+  "devDependencies": {
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.3",
+    "@babel/polyfill": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
+    "axios": "^0.19.2",
+    "babel-jest": "^24.8.0",
+    "babel-loader": "^8.0.6",
+    "clone": "^2.1.1",
+    "core-js": "^2.6.11",
+    "coveralls": "^3.0.9",
+    "cross-env": "^5.2.0",
+    "dedent": "^0.7.0",
+    "del-cli": "^1.0.0",
+    "eslint": "^5.16.0",
+    "express": "^4.17.1",
+    "html-differ": "^1.4.0",
+    "jest": "^24.8.0",
+    "jest-environment-node-debug": "^2.0.0",
+    "lerna": "^3.20.2",
+    "mdast-util-to-hast": "3.0.2",
+    "parallel-webpack": "^2.4.0",
+    "rehype-stringify": "^4.0.0",
+    "remark": "^9.0.0",
+    "remark-math": "^1.0.6",
+    "remark-parse": "^5.0.0",
+    "remark-rehype": "^3.0.2",
+    "remark-stringify": "^5.0.0",
+    "sync-request": "^6.1.0",
+    "textr": "^0.3.0",
+    "unified": "^7.1.0",
+    "unist-util-visit": "^1.4.1",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "engines": {
+    "node": ">=4"
+  },
+  "files": [
+    "LICENSE",
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "homepage": "https://github.com/twardoch/remark-comments-three#readme",
+  "keywords": [
+    "remark",
+    "remark-plugin",
+    "markdown",
+    "gfm"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "remark-comments-three",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/twardoch/remark-comments-three.git"
+  },
+  "scripts": {
+    "build": "del-cli dist && cross-env BABEL_ENV=production babel src --out-dir dist",
+    "coverage": "jest --coverage",
+    "pretest": "eslint .",
+    "test": "jest"
+  },
+  "version": "1.2.8",
+  "description": "This plugin parses custom Markdown syntax for Markdown source comments.",
+  "dependencies": {}
+}
