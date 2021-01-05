@@ -14,7 +14,7 @@
     "@babel/core": "^7.8.3",
     "@babel/polyfill": "^7.8.3",
     "@babel/preset-env": "^7.8.3",
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "babel-jest": "^24.8.0",
     "babel-loader": "^8.0.6",
     "clone": "^2.1.1",
