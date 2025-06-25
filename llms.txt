@@ -1,0 +1,741 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+__tests__/
+  __snapshots__/
+    index.js.snap
+  index.js
+src/
+  index.js
+.babelrc
+.eslintignore
+.eslintrc.json
+.gitignore
+.npmignore
+build.sh
+LICENSE
+package.json
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="__tests__/__snapshots__/index.js.snap">
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`comments 1`] = `
+"<p>Foobar</p>
+<pre><code>Foo&#x3C;--COMMENTS I will not get removed because I am in a code block DEF COMMENTS-->bar
+</code></pre>
+<p>&#x3C;--COMMENTS Unfinished block won't get parsed either GHI</p>"
+`;
+
+exports[`comments custom different markers 1`] = `
+"<p>Foobar</p>
+<pre><code>Foo&#x3C;--foo I will not get removed because I am in a code block bAR-->bar
+</code></pre>
+<p>&#x3C;--foo Unfinished block won't get parsed either</p>"
+`;
+
+exports[`comments custom same markers 1`] = `
+"<p>Foobar</p>
+<pre><code>Foo&#x3C;--foo I will not get removed because I am in a code block foo-->bar
+</code></pre>
+<p>&#x3C;--foo Unfinished block won't get parsed either</p>"
+`;
+
+exports[`compiles to markdown 1`] = `
+"Foo<--COMMENTS I will be gone ABC COMMENTS-->bar
+
+    Foo<--COMMENTS I will not get removed because I am in a code block DEF COMMENTS-->bar
+
+&lt;--COMMENTS Unfinished block won't get parsed either GHI
+"
+`;
+</file>
+
+<file path="__tests__/index.js">
+import dedent from 'dedent'
+import unified from 'unified'
+import reParse from 'remark-parse'
+import remark2rehype from 'remark-rehype'
+import remarkStringify from 'remark-stringify'
+import rehypeStringify from 'rehype-stringify'
+
+import plugin from '../src/'
+
+const renderToMarkdown = text => unified()
+  .use(reParse)
+  .use(remarkStringify)
+  .use(plugin)
+  .processSync(text)
+
+test('comments', () => {
+  const render = text => unified()
+    .use(reParse)
+    .use(plugin)
+    .use(remark2rehype)
+    .use(rehypeStringify)
+    .processSync(text)
+
+  const {contents} = render(dedent`
+    Foo<--COMMENTS I will be gone ABC COMMENTS-->bar
+
+    \`\`\`
+    Foo<--COMMENTS I will not get removed because I am in a code block DEF COMMENTS-->bar
+    \`\`\`
+
+    <--COMMENTS Unfinished block won't get parsed either GHI
+  `)
+  expect(contents).toMatchSnapshot()
+  expect(contents).not.toContain('ABC')
+  expect(contents).toContain('DEF')
+  expect(contents).toContain('GHI')
+})
+
+test('compiles to markdown', () => {
+  const {contents} = renderToMarkdown(dedent`
+    Foo<--COMMENTS I will be gone ABC COMMENTS-->bar
+
+    \`\`\`
+    Foo<--COMMENTS I will not get removed because I am in a code block DEF COMMENTS-->bar
+    \`\`\`
+
+    <--COMMENTS Unfinished block won't get parsed either GHI
+  `)
+  expect(contents).toMatchSnapshot()
+  expect(contents).toContain('Foo<--COMMENTS I will be gone ABC COMMENTS-->bar')
+})
+
+test('comments custom different markers', () => {
+  const render = text => unified()
+    .use(reParse)
+    .use(plugin, {
+      beginMarker: 'foo',
+      endMarker: 'bAR',
+    })
+    .use(remark2rehype)
+    .use(rehypeStringify)
+    .processSync(text)
+
+  const {contents} = render(dedent`
+    Foo<--foo I will be gone bAR-->bar
+
+    \`\`\`
+    Foo<--foo I will not get removed because I am in a code block bAR-->bar
+    \`\`\`
+
+    <--foo Unfinished block won't get parsed either
+  `)
+  expect(contents).toMatchSnapshot()
+})
+
+test('comments custom same markers', () => {
+  const render = text => unified()
+    .use(reParse)
+    .use(plugin, {
+      beginMarker: 'foo',
+      endMarker: 'foo',
+    })
+    .use(remark2rehype)
+    .use(rehypeStringify)
+    .processSync(text)
+
+  const {contents} = render(dedent`
+    Foo<--foo I will be gone foo-->bar
+
+    \`\`\`
+    Foo<--foo I will not get removed because I am in a code block foo-->bar
+    \`\`\`
+
+    <--foo Unfinished block won't get parsed either
+  `)
+  expect(contents).toMatchSnapshot()
+})
+</file>
+
+<file path="src/index.js">
+const beginMarkerFactory = (marker = '-') => `<!--${marker} `
+const endMarkerFactory = (marker = '-') => ` ${marker}->`
+
+function plugin({
+  beginMarker = '-',
+  endMarker = '-'
+} = {}) {
+  beginMarker = beginMarkerFactory(beginMarker)
+  endMarker = endMarkerFactory(endMarker)
+
+  function locator(value, fromIndex) {
+    return value.indexOf(beginMarker, fromIndex)
+  }
+
+  function inlineTokenizer(eat, value, silent) {
+    const keepBegin = value.indexOf(beginMarker)
+    const keepEnd = value.indexOf(endMarker)
+    if (keepBegin !== 0 || keepEnd === -1) return
+
+    /* istanbul ignore if - never used (yet) */
+    if (silent) return true
+
+    const comment = value.substring(beginMarker.length, keepEnd)
+    return eat(beginMarker + comment + endMarker)({
+      type: 'comments',
+      value: '',
+      data: {
+        comment
+      },
+    })
+  }
+  inlineTokenizer.locator = locator
+
+  const Parser = this.Parser
+
+  // Inject inlineTokenizer
+  const inlineTokenizers = Parser.prototype.inlineTokenizers
+  const inlineMethods = Parser.prototype.inlineMethods
+  inlineTokenizers.comments = inlineTokenizer
+  inlineMethods.splice(inlineMethods.indexOf('text'), 0, 'comments')
+
+  const Compiler = this.Compiler
+  if (Compiler) {
+    const visitors = Compiler.prototype.visitors
+    if (!visitors) return
+    visitors.comments = (node) => {
+      return beginMarker + node.data.comment + endMarker
+    }
+  }
+}
+
+module.exports = plugin
+</file>
+
+<file path=".babelrc">
+{
+  "presets": ["@babel/preset-env"],
+  "plugins": [],
+  "env": {
+    "development": {
+      "sourceMaps": "inline"
+    }
+  }
+}
+</file>
+
+<file path=".eslintignore">
+coverage
+public/*
+packages/*/dist/*
+dist/
+</file>
+
+<file path=".eslintrc.json">
+{
+  "parserOptions": {
+    "ecmaVersion": 6,
+    "sourceType": "module"
+  },
+
+  "env": {
+    "es6": true,
+    "node": true,
+    "mocha": true
+  },
+
+  "plugins": [],
+
+  "globals": {
+    "document": false,
+    "navigator": false,
+    "window": false,
+    "expect": true
+  },
+
+  "rules": {
+    "accessor-pairs": 2,
+    "array-bracket-spacing": [1, "never"],
+    "arrow-spacing": [2, {"before": true, "after": true}],
+    "block-spacing": [2, "always"],
+    "brace-style": [2, "1tbs", {"allowSingleLine": true}],
+    "camelcase": [2, {"properties": "never"}],
+    "comma-dangle": [1, "always-multiline"],
+    "comma-spacing": [2, {"before": false, "after": true}],
+    "comma-style": [2, "last"],
+    "computed-property-spacing": [2, "never"],
+    "constructor-super": 2,
+    "curly": [2, "multi-line"],
+    "dot-location": [2, "property"],
+    "eol-last": [2, "always"],
+    "eqeqeq": [2, "allow-null"],
+    "func-call-spacing": [2, "never"],
+    "callback-return": [1, ["callback", "cb", "done"]],
+    "handle-callback-err": [2, "^(err|error)$"],
+    "indent": [2, 2, {
+      "SwitchCase": 1,
+      "VariableDeclarator": 1,
+      "outerIIFEBody": 1,
+      "FunctionDeclaration": {
+        "parameters": 1,
+        "body": 1
+      },
+      "FunctionExpression": {
+        "parameters": 1,
+        "body": 1
+      }
+    }],
+    "key-spacing": [2, {"beforeColon": false, "afterColon": true}],
+    "keyword-spacing": [2, {"before": true, "after": true}],
+    "linebreak-style": [2, "unix"],
+    "max-len": ["error", {
+      "code": 100,
+      "ignoreRegExpLiterals": true,
+      "ignorePattern": "^\\s*const\\s.+=\\s*require\\s*\\("
+    }],
+    "new-cap": [2, {"newIsCap": true, "capIsNew": false}],
+    "new-parens": 2,
+    "newline-per-chained-call": [2, {"ignoreChainWithDepth": 4}],
+    "no-array-constructor": 2,
+    "no-caller": 2,
+    "no-class-assign": 2,
+    "no-cond-assign": 2,
+    "no-console": [1, {"allow": ["error"]}],
+    "no-const-assign": 2,
+    "no-constant-condition": [2, {"checkLoops": false}],
+    "no-control-regex": 2,
+    "no-debugger": 2,
+    "no-delete-var": 2,
+    "no-dupe-args": 2,
+    "no-dupe-class-members": 2,
+    "no-dupe-keys": 2,
+    "no-duplicate-case": 2,
+    "no-duplicate-imports": 2,
+    "no-empty-character-class": 2,
+    "no-empty-pattern": 2,
+    "no-eval": 2,
+    "no-ex-assign": 2,
+    "no-extend-native": 2,
+    "no-extra-bind": 2,
+    "no-extra-boolean-cast": 2,
+    "no-extra-parens": [2, "functions"],
+    "no-fallthrough": 2,
+    "no-floating-decimal": 2,
+    "no-func-assign": 2,
+    "no-global-assign": 2,
+    "no-implied-eval": 2,
+    "no-inner-declarations": [2, "functions"],
+    "no-invalid-regexp": 2,
+    "no-irregular-whitespace": 2,
+    "no-iterator": 2,
+    "no-label-var": 2,
+    "no-labels": [2, {"allowLoop": false, "allowSwitch": false}],
+    "no-lone-blocks": 2,
+    "no-lonely-if": 2,
+    "no-mixed-operators": [2, {
+      "groups": [
+        ["+", "-", "*", "/", "%", "**"],
+        ["&", "|", "^", "~", "<<", ">>", ">>>"],
+        ["==", "!=", "===", "!==", ">", ">=", "<", "<="],
+        ["&&", "||"],
+        ["in", "instanceof"]
+      ],
+      "allowSamePrecedence": false
+    }],
+    "no-mixed-spaces-and-tabs": 2,
+    "no-multi-spaces": 2,
+    "no-multi-str": 2,
+    "no-multiple-empty-lines": [2, {"max": 2}],
+    "no-native-reassign": 2,
+    "no-negated-in-lhs": 2,
+    "no-nested-ternary": 2,
+    "no-new": 2,
+    "no-new-func": 2,
+    "no-new-object": 2,
+    "no-new-require": 2,
+    "no-new-symbol": 2,
+    "no-new-wrappers": 2,
+    "no-obj-calls": 2,
+    "no-octal": 2,
+    "no-octal-escape": 2,
+    "no-path-concat": 2,
+    "no-proto": 2,
+    "no-redeclare": 2,
+    "no-regex-spaces": 2,
+    "no-return-assign": [2, "except-parens"],
+    "no-self-assign": 2,
+    "no-self-compare": 2,
+    "no-sequences": 2,
+    "no-shadow-restricted-names": 2,
+    "no-sparse-arrays": 2,
+    "no-tabs": 2,
+    "no-template-curly-in-string": 2,
+    "no-this-before-super": 2,
+    "no-throw-literal": 2,
+    "no-trailing-spaces": 2,
+    "no-undef": 2,
+    "no-undef-init": 2,
+    "no-unexpected-multiline": 2,
+    "no-unmodified-loop-condition": 2,
+    "no-unneeded-ternary": [2, {"defaultAssignment": false}],
+    "no-unreachable": 2,
+    "no-unsafe-finally": 2,
+    "no-unsafe-negation": 2,
+    "no-unused-vars": [2, {"vars": "all", "args": "none"}],
+    "no-useless-call": 2,
+    "no-useless-computed-key": 2,
+    "no-useless-constructor": 2,
+    "no-useless-escape": 2,
+    "no-useless-rename": 2,
+    "no-var": 2,
+    "no-whitespace-before-property": 2,
+    "no-with": 2,
+    "object-curly-spacing": [1, "never"],
+    "object-property-newline": [2, {"allowMultiplePropertiesPerLine": true}],
+    "one-var": [2, {"initialized": "never"}],
+    "operator-linebreak": [2, "after", {"overrides": {"?": "before", ":": "before"}}],
+    "padded-blocks": [0, "never"],
+    "prefer-template": 2,
+    "prefer-const": [2, {"destructuring": "any", "ignoreReadBeforeAssign": true}],
+    "quotes": [2, "single", {"avoidEscape": true, "allowTemplateLiterals": true}],
+    "rest-spread-spacing": [2, "never"],
+    "semi": [2, "never"],
+    "semi-spacing": [2, {"before": false, "after": true}],
+    "space-before-blocks": [2, "always"],
+    "space-before-function-paren": [2, "always"],
+    "space-in-parens": [2, "never"],
+    "space-infix-ops": 2,
+    "space-unary-ops": [2, {"words": true, "nonwords": false}],
+    "spaced-comment": [2, "always",
+      {"line": {"markers": ["*package", "!", ","]}, "block": {"balanced": true, "markers": ["*package", "!", ","], "exceptions": ["*"]}}
+    ],
+    "template-curly-spacing": [2, "never"],
+    "unicode-bom": [2, "never"],
+    "use-isnan": 2,
+    "valid-typeof": 2,
+    "wrap-iife": [2, "any", {"functionPrototypeMethods": true}],
+    "yield-star-spacing": [2, "both"],
+    "yoda": [2, "never"]
+  }
+}
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Directory for instrumented libs generated by jscoverage/JSCover
+lib-cov
+
+# Coverage directory used by tools like istanbul
+coverage
+
+# nyc test coverage
+.nyc_output
+
+# Grunt intermediate storage (http://gruntjs.com/creating-plugins#storing-task-files)
+.grunt
+
+# Bower dependency directory (https://bower.io/)
+bower_components
+
+# node-waf configuration
+.lock-wscript
+
+# Compiled binary addons (https://nodejs.org/api/addons.html)
+build/Release
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# TypeScript v1 declaration files
+typings/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env
+
+# next.js build output
+.next
+</file>
+
+<file path=".npmignore">
+/index.js
+/__tests__
+/.npmignore
+/coverage
+*.log
+/src
+</file>
+
+<file path="build.sh">
+npm install && npm run build
+</file>
+
+<file path="LICENSE">
+MIT License
+
+Copyright (c) 2019 Adam Twardoch
+Copyright (c) Zeste de Savoir (https://zestedesavoir.com)
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</file>
+
+<file path="package.json">
+{
+  "author": "Adam Twardoch <adam+github@twardoch.com> (https://twardoch.github.io)",
+  "bugs": {
+    "url": "https://github.com/twardoch/remark-comments-three/issues"
+  },
+  "contributors": [
+    "Adam Twardoch <adam+github@twardoch.com>",
+    "Sébastien <contact@enconn.fr> (AmarOk)",
+    "François <perso@francoisdambrine.me> (artragis)",
+    "Victor Felder <victor@draft.li> (https://draft.li)"
+  ],
+  "devDependencies": {
+    "@babel/cli": "^7.8.3",
+    "@babel/core": "^7.8.3",
+    "@babel/polyfill": "^7.8.3",
+    "@babel/preset-env": "^7.8.3",
+    "axios": "^0.19.2",
+    "babel-jest": "^24.8.0",
+    "babel-loader": "^8.0.6",
+    "clone": "^2.1.1",
+    "core-js": "^2.6.11",
+    "coveralls": "^3.0.9",
+    "cross-env": "^5.2.0",
+    "dedent": "^0.7.0",
+    "del-cli": "^1.0.0",
+    "eslint": "^5.16.0",
+    "express": "^4.17.1",
+    "html-differ": "^1.4.0",
+    "jest": "^24.8.0",
+    "jest-environment-node-debug": "^2.0.0",
+    "lerna": "^3.20.2",
+    "mdast-util-to-hast": "3.0.2",
+    "parallel-webpack": "^2.4.0",
+    "rehype-stringify": "^4.0.0",
+    "remark": "^9.0.0",
+    "remark-math": "^1.0.6",
+    "remark-parse": "^5.0.0",
+    "remark-rehype": "^3.0.2",
+    "remark-stringify": "^5.0.0",
+    "sync-request": "^6.1.0",
+    "textr": "^0.3.0",
+    "unified": "^7.1.0",
+    "unist-util-visit": "^1.4.1",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10"
+  },
+  "engines": {
+    "node": ">=4"
+  },
+  "files": [
+    "LICENSE",
+    "dist",
+    "src",
+    "README.md"
+  ],
+  "homepage": "https://github.com/twardoch/remark-comments-three#readme",
+  "keywords": [
+    "remark",
+    "remark-plugin",
+    "markdown",
+    "gfm"
+  ],
+  "license": "MIT",
+  "main": "dist/index.js",
+  "name": "remark-comments-three",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/twardoch/remark-comments-three.git"
+  },
+  "scripts": {
+    "build": "del-cli dist && cross-env BABEL_ENV=production babel src --out-dir dist",
+    "coverage": "jest --coverage",
+    "pretest": "eslint .",
+    "test": "jest"
+  },
+  "version": "1.2.9",
+  "description": "This plugin parses custom Markdown syntax for Markdown source comments.",
+  "dependencies": {}
+}
+</file>
+
+<file path="README.md">
+# remark-comments-three [![Build Status][build-badge]][build-status] [![Coverage Status][coverage-badge]][coverage-status]
+
+This plugin parses custom Markdown syntax for Markdown source comments.
+
+## Syntax
+
+You can insert comments in the Markdown source this way:
+
+```markdown
+Foo<!---I am a comment-->bar
+```
+
+Everything between `<!---` and `-->` will be absent from the HTML output. Compiling to Markdown will preserve all comments.
+
+## AST node (see [mdast][mdast] specification)
+
+The plugin will product the following node and add it to the MDAST syntax tree:
+
+```javascript
+interface Comments <: Node {
+  type: "comments";
+  data: {
+    comment: string;
+  }
+}
+```
+
+## Installation
+
+[npm][npm]:
+
+```bash
+npm install remark-comments-three
+```
+
+## Configuration
+
+Two options can be passed, as a single argument object:
+
+    {beginMarker = 'COMMENTS', endMarker = 'COMMENTS'}
+
+Therefore, invoking this plugin this way:
+
+```js
+  .use(remarkComments, {
+    beginMarker: 'foo',
+    endMarker: 'bar'
+  })
+```
+
+will make this plugin remove what's put between `<!---foo` and `bar-->`.
+
+## Usage
+
+Dependencies:
+
+```javascript
+const unified = require('unified')
+const remarkParse = require('remark-parse')
+const stringify = require('rehype-stringify')
+const remark2rehype = require('remark-rehype')
+
+const remarkComments = require('remark-comments')
+```
+
+Usage:
+
+```javascript
+unified()
+  .use(remarkParse)
+  .use(remarkComments)
+  .use(remark2rehype)
+  .use(stringify)
+```
+
+## License
+
+[MIT][license] © [Zeste de Savoir][zds]
+
+<!-- Definitions -->
+
+[build-badge]: https://img.shields.io/travis/zestedesavoir/zmarkdown.svg
+
+[build-status]: https://travis-ci.org/zestedesavoir/zmarkdown
+
+[coverage-badge]: https://img.shields.io/coveralls/zestedesavoir/zmarkdown.svg
+
+[coverage-status]: https://coveralls.io/github/zestedesavoir/zmarkdown
+
+[license]: https://github.com/zestedesavoir/zmarkdown/blob/master/packages/remark-comments/LICENSE-MIT
+
+[zds]: https://zestedesavoir.com
+
+[npm]: https://www.npmjs.com/package/remark-comments
+</file>
+
+</files>
