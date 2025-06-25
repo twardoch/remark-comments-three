@@ -1,31 +1,38 @@
 const beginMarkerFactory = (marker = '-') => `<!--${marker} `
 const endMarkerFactory = (marker = '-') => ` ${marker}->`
 
-function plugin({
+function plugin ({
   beginMarker = '-',
-  endMarker = '-'
+  endMarker = '-',
 } = {}) {
   beginMarker = beginMarkerFactory(beginMarker)
   endMarker = endMarkerFactory(endMarker)
 
-  function locator(value, fromIndex) {
+  function locator (value, fromIndex) {
     return value.indexOf(beginMarker, fromIndex)
   }
 
-  function inlineTokenizer(eat, value, silent) {
-    const keepBegin = value.indexOf(beginMarker)
-    const keepEnd = value.indexOf(endMarker)
-    if (keepBegin !== 0 || keepEnd === -1) return
+  function inlineTokenizer (eat, value, silent) {
+    if (!value.startsWith(beginMarker)) {
+      return
+    }
+    // Search for endMarker *after* the beginMarker
+    const endMarkerIndex = value.indexOf(endMarker, beginMarker.length)
+    if (endMarkerIndex === -1) {
+      return
+    }
 
     /* istanbul ignore if - never used (yet) */
-    if (silent) return true
+    if (silent) {
+      return true
+    }
 
-    const comment = value.substring(beginMarker.length, keepEnd)
+    const comment = value.substring(beginMarker.length, endMarkerIndex)
     return eat(beginMarker + comment + endMarker)({
       type: 'comments',
-      value: '',
+      value: '', // Value is empty, content is in data
       data: {
-        comment
+        comment,
       },
     })
   }
