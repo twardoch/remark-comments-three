@@ -21,6 +21,11 @@ This document outlines a comprehensive plan to modernize and improve the `remark
 6. **Limited Documentation**: Missing API docs, contribution guide, advanced examples
 7. **Old Remark APIs**: Using older unified/remark plugin patterns
 
+### Codebase Structure and Refactoring Opportunities
+- Analyzed `REFACTOR_FILELIST.txt` for large code files. The only significant code file identified was `./__tests__/index.js` (2KB).
+- A detailed analysis in `REFACTOR_SPLITTING.md` concluded that splitting `./__tests__/index.js` is not advisable due to its small size and potential for increased complexity. Instead, internal organization and readability improvements are recommended.
+- Future refactoring efforts will focus on the core plugin logic in `src/index.js` as part of the Remark/Unified ecosystem updates, should its complexity warrant modularization.
+
 ## Improvement Phases
 
 ### Phase 1: Dependency Modernization (Priority: High)

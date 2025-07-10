@@ -1,0 +1,6 @@
+477	./package-lock.json
+19	./llms.txt
+13	./README.md
+7	./PLAN.md
+5	./TODO.md
+2	./__tests__/index.js

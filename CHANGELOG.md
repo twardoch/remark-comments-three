@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Created `REFACTOR_SPLITTING.md` with analysis and plan for code splitting
+
 ## [1.2.9] - 2025-06-29
 ### Added
 - Created `PLAN.md`, `TODO.md`, `CHANGELOG.md` for better project management
