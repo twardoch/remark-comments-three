@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2025-01-18
+### Added
+- **Complete CI/CD pipeline** with GitHub Actions for automated testing and deployment
+- **Git-tag-based semversioning** system with automatic version management
+- **Comprehensive test suite** with edge cases, API tests, and version management tests
+- **Local development scripts** for convenient build, test, and release workflows
+- **Multiplatform binary releases** with automatic artifact generation
+- **Security auditing** integrated into CI pipeline
+- **Development environment setup** with interactive scripts
+- **Comprehensive documentation** including DEVELOPMENT.md guide
+- **Enhanced npm packaging** with proper .npmignore configuration
+- **Dual registry publishing** (npm and GitHub Package Registry)
+- **Pre-release support** with beta tag publishing
+- **Coverage reporting** with Coveralls integration
+- **Multiple Node.js version testing** (18, 20, 22)
+
+### Changed
+- **Upgraded project structure** to modern CI/CD standards
+- **Enhanced package.json** with comprehensive script commands
+- **Improved build process** with automated version updates
+- **Modernized development workflow** with automated checks
+
+### Fixed
+- **Code quality issues** resolved with comprehensive ESLint fixes
+- **Test stability** with proper error handling and edge case coverage
+
+### Security
+- **Dependency auditing** with npm audit integration
+- **Automated security scanning** in CI pipeline
+
 ## [1.2.9] - 2025-06-29
 ### Added
 - Created `PLAN.md`, `TODO.md`, `CHANGELOG.md` for better project management
