@@ -267,6 +267,56 @@ You can pass a single options object when registering the plugin with `.use()`:
 
 Refer to the [Comment Syntax and Markers](#comment-syntax-and-markers) section for detailed examples.
 
+## Development & CI/CD
+
+This project features a comprehensive CI/CD pipeline with:
+
+- **🔄 Automated Testing**: Multi-Node.js version testing (18, 20, 22)
+- **📦 Automated Releases**: Git-tag-based semversioning with automatic GitHub releases
+- **🚀 Dual Publishing**: Automatic publishing to npm and GitHub Package Registry
+- **🔍 Quality Checks**: ESLint, security auditing, and coverage reporting
+- **🛠️ Development Tools**: Local build, test, and release scripts
+
+### Quick Start for Development
+
+```bash
+# Set up development environment
+npm run dev setup
+
+# Run tests in watch mode
+npm run dev test
+
+# Run all quality checks
+npm run dev check
+
+# Build locally
+npm run build:local
+```
+
+### Creating Releases
+
+1. Create and push a git tag:
+   ```bash
+   git tag v1.2.3
+   git push origin v1.2.3
+   ```
+
+2. GitHub Actions will automatically:
+   - Run the full test suite
+   - Build the project
+   - Create a GitHub release
+   - Publish to npm
+   - Publish to GitHub Package Registry
+
+### Development Documentation
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for comprehensive development guidelines, including:
+- Development setup and workflows
+- Testing strategies
+- Version management
+- Release processes
+- CI/CD pipeline details
+
 ## Contributing
 
 Contributions are welcome! Whether it's bug reports, feature suggestions, or pull requests, your help is appreciated.

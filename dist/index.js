@@ -25,16 +25,28 @@ function plugin() {
   }
 
   function inlineTokenizer(eat, value, silent) {
-    var keepBegin = value.indexOf(beginMarker);
-    var keepEnd = value.indexOf(endMarker);
-    if (keepBegin !== 0 || keepEnd === -1) return;
+    if (!value.startsWith(beginMarker)) {
+      return;
+    } // Search for endMarker *after* the beginMarker
+
+
+    var endMarkerIndex = value.indexOf(endMarker, beginMarker.length);
+
+    if (endMarkerIndex === -1) {
+      return;
+    }
     /* istanbul ignore if - never used (yet) */
 
-    if (silent) return true;
-    var comment = value.substring(beginMarker.length, keepEnd);
+
+    if (silent) {
+      return true;
+    }
+
+    var comment = value.substring(beginMarker.length, endMarkerIndex);
     return eat(beginMarker + comment + endMarker)({
       type: 'comments',
       value: '',
+      // Value is empty, content is in data
       data: {
         comment: comment
       }

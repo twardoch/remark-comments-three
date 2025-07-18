@@ -1,0 +1,35 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Custom markers edge cases markers with spaces 1`] = `""`;
+
+exports[`Custom markers edge cases markers with special regex characters 1`] = `""`;
+
+exports[`Custom markers edge cases very long markers 1`] = `""`;
+
+exports[`Edge cases comments across multiple lines 1`] = `"<p>Regular text here.</p>"`;
+
+exports[`Edge cases comments in headers 1`] = `"<h1>Header  text</h1>"`;
+
+exports[`Edge cases comments in links 1`] = `"<p><a href=\\"http://example.com\\">Link text</a></p>"`;
+
+exports[`Edge cases comments in lists 1`] = `
+"<ul>
+<li>Item 1 </li>
+<li>Item 2</li>
+<li></li>
+</ul>"
+`;
+
+exports[`Edge cases comments with markdown syntax inside 1`] = `""`;
+
+exports[`Edge cases comments with only whitespace 1`] = `""`;
+
+exports[`Edge cases comments with special characters 1`] = `""`;
+
+exports[`Edge cases empty comments 1`] = `""`;
+
+exports[`Edge cases malformed comments are not parsed 1`] = `""`;
+
+exports[`Edge cases nested comments are not supported 1`] = `""`;
+
+exports[`Integration with other remark plugins comments work with emphasis 1`] = `"<p><strong>Bold  text</strong></p>"`;
